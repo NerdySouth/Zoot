@@ -2,6 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.build.Builder) !void {
     const exe = b.addExecutable("zoot", "src/main.zig");
+    exe.addAssemblyFile("src/asm/start.S");
     // Configure the target. The target tells the compiler details about the
     // hardware and software that is going to run the program. Since we are
     // building a kernel for the RockPro64, we need to use a non-native
@@ -56,7 +57,7 @@ pub fn build(b: *std.build.Builder) !void {
     // this. (Not sure I understand this correctly, but here I go: if I omit
     // this line, the build system can assume that I am not interested in the
     // executable, so it will not be placed under `zig-out`.)
-    exe.install();
+    _ = exe.getOutputSource();
 
     // This tells the build system (via 'addInstallRaw') that I want to
     // generate a raw binary image from the ELF executable we generated above.

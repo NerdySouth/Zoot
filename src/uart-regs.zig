@@ -98,7 +98,7 @@ pub const uart_thr = packed struct(u32) {
     // Attr: RW (Read/Write)
     data_output: u8,
     // Attr: RO (read only)
-    _reserved: u24,
+    _reserved: u24 = 0,
 };
 
 /// UART DLL register, short for Divisor Latch (Low)
@@ -323,7 +323,7 @@ pub const uart_lcr = packed struct(u32) {
     /// Attr: RW
     even_parity_sel: bool,
     /// SBZ, Bit 5
-    _reserved: bool,
+    _reserved: bool = false,
     /// Break Control bit
     ///
     /// This is used to cause a break condition to be transmitted to the
@@ -348,7 +348,7 @@ pub const uart_lcr = packed struct(u32) {
     div_lat_access: bool,
     /// SBZ, bits 8:31
     /// Attr: RO
-    _reserved8_31: u24,
+    _reserved8_31: u24 = 0,
 };
 
 /// UART MCR, short for Modem Control Register
@@ -704,7 +704,7 @@ pub const uart_rfl = packed struct(u32) {
 /// UART SRR, short for Software Reset Register
 /// Address: Operational Base + offset (0x0088)
 /// Attr: WO
-pub const uart_srr = packed struct {
+pub const uart_srr = packed struct(u32) {
     /// UART Reset.
     ///
     /// This asynchronously resets the UART and synchronously removes the
@@ -720,7 +720,7 @@ pub const uart_srr = packed struct {
     /// This is a shadow for the XMIT FIFO Reset bit (FCR[2])
     xmit_fifo_reset: bool,
     /// SBZ, Bits 3:31
-    _reserved3_31: u29,
+    _reserved3_31: u29 = 0,
 };
 
 /// UART SRTS, short for Software Request To Send

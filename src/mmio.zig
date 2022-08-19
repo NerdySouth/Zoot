@@ -82,7 +82,8 @@ pub fn Register(comptime Read: type, comptime Write: type) type {
                 }
             }
 
-            self.raw_ptr.* = @bitCast(Write, val);
+            // cast to u32 here because thats what the underlying ptr is expecting
+            self.raw_ptr.* = @bitCast(u32, val);
         }
 
         pub fn modify(self: Self, new_val: anytype) void {

@@ -6,7 +6,7 @@ const mmio_register = @import("mmio.zig");
 /// or service it should perform internally.
 /// See the GRF (General Register Files) chapter of the RK3399 TRM for more
 /// info
-pub const GRF_BASE = 0xFF7700000;
+pub const GRF_BASE = 0xFF770000;
 pub const GPIO4B_OFFSET = 0xE024;
 pub const GPIO4C_OFFSET = 0xE028;
 pub const PMU_GRF_BASE = 0xFF320000;

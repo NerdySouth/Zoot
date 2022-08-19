@@ -15,21 +15,29 @@
 // `.text.boot`, and `_start` is effectivelly ignored. However, the linker
 // will complain if it can't find `_start`, so I define it here to make our
 // tools happy. There's probably a more elegant way to do this...
-comptime {
-    asm (
-        \\.section .text.boot
-        \\.global _start
-        \\_start:
-        \\b zigMain
-    );
+const mmio = @import("mmio.zig");
+const uart = @import("uart.zig");
+
+fn delay() void {
+    var def_delay: usize = 1000000;
+    const ptr: *volatile usize = &def_delay;
+
+    while (def_delay > 0) {
+        ptr.* -= 1;
+    }
 }
 
-const std = @import("std");
-const mmio = @import("mmio.zig");
-const uart_regs = @import("uart-regs.zig");
+fn talker() void {
+    comptime var limit = 10;
+    while (limit > 0) {
+        uart.print("hello\n");
+        limit -= 1;
+    }
+}
 
 export fn zigMain() noreturn {
-    const _srr_reg = mmio.Register(void, uart_regs.uart_srr).init(uart_regs.UART2_BASE + uart_regs.SRR_OFFSET);
-    _ = _srr_reg.read_raw();
+    uart.uartInit();
+    delay();
+    talker();
     unreachable;
 }
