@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn build(b: *std.build.Builder) !void {
-    const exe = b.addExecutable("ziggy-wiggy", "src/main.zig");
+    const exe = b.addExecutable("zoot", "src/main.zig");
     // Configure the target. The target tells the compiler details about the
     // hardware and software that is going to run the program. Since we are
     // building a kernel for the RockPro64, we need to use a non-native

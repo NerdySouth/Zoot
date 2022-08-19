@@ -337,7 +337,7 @@ pub const uart_lcr = packed struct(u32) {
     /// Attr: RW
     break_ctrl: bool,
     /// Divisor Latch Access Bit.
-    ///
+    ////
     /// Writeable only when UART is not busy (USR[0] is zero), always readable.
     /// This bit is used to enable reading and writing of the Divisor Latch
     /// register (DLL and DLH) to set the baud rate of the UART. This bit must
@@ -704,7 +704,7 @@ pub const uart_rfl = packed struct(u32) {
 /// UART SRR, short for Software Reset Register
 /// Address: Operational Base + offset (0x0088)
 /// Attr: WO
-pub const uart_srr = packed struct(u32) {
+pub const uart_srr = packed struct {
     /// UART Reset.
     ///
     /// This asynchronously resets the UART and synchronously removes the

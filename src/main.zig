@@ -24,12 +24,12 @@ comptime {
     );
 }
 
-const uart = @import("uart.zig");
+const std = @import("std");
+const mmio = @import("mmio.zig");
+const uart_regs = @import("uart-regs.zig");
 
 export fn zigMain() noreturn {
-    var count: u64 = 0;
-    while (true) {
-        count += 1;
-    }
+    const _srr_reg = mmio.Register(void, uart_regs.uart_srr).init(uart_regs.UART2_BASE + uart_regs.SRR_OFFSET);
+    _ = _srr_reg.read_raw();
     unreachable;
 }
