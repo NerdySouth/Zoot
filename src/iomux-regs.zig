@@ -27,7 +27,7 @@ const gpio_4b_grf = packed struct(u32) {
 pub const gpio_4b_reg = mmio_register.Register(gpio_4b_grf, gpio_4b_grf).init(GRF_BASE + GPIO4B_OFFSET);
 
 /// GPIO4C IOMUX Control Register
-const gpio_4c_grf = packed struct(u32) {
+pub const gpio_4c_grf = packed struct(u32) {
     sel_0: u2,
     sel_1: u2,
     sel_2: u2,

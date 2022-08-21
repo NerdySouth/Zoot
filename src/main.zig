@@ -18,6 +18,9 @@
 const mmio = @import("mmio.zig");
 const uart = @import("uart.zig");
 
+extern var __bss_start: u8;
+extern var __bss_end: u8;
+
 fn delay() void {
     var def_delay: usize = 1000000;
     const ptr: *volatile usize = &def_delay;
@@ -27,17 +30,13 @@ fn delay() void {
     }
 }
 
-fn talker() void {
-    comptime var limit = 10;
-    while (limit > 0) {
-        uart.print("hello\n");
-        limit -= 1;
-    }
-}
-
 export fn zigMain() noreturn {
+    // zero BSS
+    @memset(@as(*volatile [1]u8, &__bss_start), 0, @ptrToInt(&__bss_end) - @ptrToInt(&__bss_start));
     uart.uartInit();
-    delay();
-    talker();
+    while (true) {
+        delay();
+    }
+    //talker();
     unreachable;
 }

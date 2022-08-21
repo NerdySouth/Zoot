@@ -1,7 +1,6 @@
-/// Function for creating a Register struct. A register can be read or written,
-/// but may have different behavior or characteristics depending on which
+/// A register can be read or written, but may have different behavior or characteristics depending on which
 /// you choose to do. This allows us to instantiate Register instances that
-/// can handle that fact.
+/// can handle that fact by having distinct read and write types.
 pub fn Register(comptime Read: type, comptime Write: type) type {
 
     // does not make sense to try and make a register that cannot be read from

@@ -7,15 +7,44 @@ ENTRY(_start)
 
 SECTIONS
 {
-	.text.boot 0xff8c2000 : {
-        KEEP(*(.text.boot))
-    }
+	. = 0xFF8C2000;
 
 	. = ALIGN(4);
 	.text :
 	{
+        KEEP(*(.text.boot))
 		*(.text)
 	}
+
+    .rodata : ALIGN(4K) {
+        *(.rodata)
+        __debug_info_start = .;
+        KEEP(*(.debug_info))
+        __debug_info_end = .;
+        __debug_abbrev_start = .;
+        KEEP(*(.debug_abbrev))
+        __debug_abbrev_end = .;
+        __debug_str_start = .;
+        KEEP(*(.debug_str))
+        __debug_str_end = .;
+        __debug_line_start = .;
+        KEEP(*(.debug_line))
+        __debug_line_end = .;
+        __debug_ranges_start = .;
+        KEEP(*(.debug_ranges))
+        __debug_ranges_end = .;
+    }
+
+    .data : ALIGN(4) {
+        *(.data)
+    }
+
+    .bss : ALIGN(4) {
+        __bss_start = .;
+        *(COMMON)
+        *(.bss)
+        __bss_end = .;
+    }
     
 	 /*
 	 * But there's one thing I do here: I discard all sections that I don't want

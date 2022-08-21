@@ -13,7 +13,7 @@ next:
 
     // if here, must be boot core
     // jump to C 
-	b	main
+	b	zigMain
 
 	// Infinitely wait for events (aka "park the core").
 .L_parking_loop:

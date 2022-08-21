@@ -10,7 +10,7 @@ pub fn build(b: *std.build.Builder) !void {
     const target = .{
         // The Pine RockPro64 has an ARM CPU (actually 6), so we can set the
         // cpu arch to aarch64 (or arm for 32bit mode)
-        .cpu_arch = .arm,
+        .cpu_arch = .aarch64,
 
         // This is a bit more advanced. Since I know what board im targeting,
         // I also know the exact CPU (Cortex A53 is our boot-core, but we also
@@ -50,21 +50,15 @@ pub fn build(b: *std.build.Builder) !void {
     });
 
     exe.setBuildMode(mode);
-
-    // FROM RPI 3 BARE METAL EXAMPLE:
-    // This says that the ELF executable will be copied to `zig-out/bin/` as
-    // part of the `install` step. The `dump-elf` (defined below) step will need
-    // this. (Not sure I understand this correctly, but here I go: if I omit
-    // this line, the build system can assume that I am not interested in the
-    // executable, so it will not be placed under `zig-out`.)
-    _ = exe.getOutputSource();
+    exe.emit_docs = .emit;
+    exe.install();
 
     // This tells the build system (via 'addInstallRaw') that I want to
     // generate a raw binary image from the ELF executable we generated above.
     // This is the binary our RockPro64 can run. I make this step a dependency
     // of the default 'install step' of the build system, so it will get
     // executed each time you run 'zig build'
-    const bin = b.addInstallRaw(exe, "nox-kernel.img", .{});
+    const bin = b.addInstallRaw(exe, "zoot.bin", .{});
     b.getInstallStep().dependOn(&bin.step);
 
     // This is for troubleshooting, and comes in handy for debugging linker
@@ -73,10 +67,10 @@ pub fn build(b: *std.build.Builder) !void {
     // file be in 'zig-out/bin/', and the install step of the build process is
     // what places it there. Run with 'zig build dump-elf'
     const dumpElfCommand = b.addSystemCommand(&[_][]const u8{
-        "arm-none-eabi-objdump",
+        "aarch64-none-elf-objdump",
         "-D",
         "-m",
-        "arm",
+        "aarch64",
         b.getInstallPath(.{ .custom = "bin" }, exe.out_filename),
     });
     dumpElfCommand.step.dependOn(b.getInstallStep());
@@ -86,10 +80,10 @@ pub fn build(b: *std.build.Builder) !void {
     // As above but for the final binary that will be run on our RockPro64.
     // Run with 'zig build dump-bin'
     const dumpBinCommand = b.addSystemCommand(&[_][]const u8{
-        "arm-none-eabi-objdump",
+        "aarch64-none-elf-objdump",
         "-D",
         "-m",
-        "arm",
+        "aarch64",
         "-b",
         "binary",
         b.getInstallPath(bin.dest_dir, bin.dest_filename),

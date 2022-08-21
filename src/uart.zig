@@ -1,5 +1,3 @@
-const std = @import("std");
-const expect = std.testing.expect;
 const uart_regs = @import("uart-regs.zig");
 const iomux_regs = @import("iomux-regs.zig");
 const mmio = @import("mmio.zig");
@@ -52,9 +50,8 @@ fn uartIOMux() void {
     // it appears to  work just fine using this method as well.
     const register = iomux_regs.gpio_4c_reg;
     var reg_val = register.read();
+    // enable write to proper bits
     reg_val.write_enable = (reg_val.write_enable & 0xA0);
-    register.write(reg_val);
-
     // can now switch mode to UART2
     reg_val.sel_3 = 1;
     reg_val.sel_4 = 1;
@@ -92,36 +89,36 @@ pub fn uartInit() void {
     uartIOMux();
 
     // disable all interrupts
-    mmio.Register(void, uart_regs.uart_ier).init(ier_addr).write_raw(0);
+    //    mmio.Register(void, uart_regs.uart_ier).init(ier_addr).write_raw(0);
 
-    // Reset the uart and both fifos
-    const uart_reset_mask = uart_regs.uart_srr{
-        .uart_reset = true,
-        .rcvr_fifo_reset = true,
-        .xmit_fifo_reset = true,
-    };
-    mmio.Register(void, uart_regs.uart_srr).init(srr_addr).write(uart_reset_mask);
+    //   // Reset the uart and both fifos
+    //   const uart_reset_mask = uart_regs.uart_srr{
+    //       .uart_reset = true,
+    //       .rcvr_fifo_reset = true,
+    //       .xmit_fifo_reset = true,
+    //   };
+    //   mmio.Register(void, uart_regs.uart_srr).init(srr_addr).write(uart_reset_mask);
 
-    // set MCR register to 0 (broadly disables some stuff)
-    mmio.Register(void, u32).init(mcr_addr).write(0);
+    //   // set MCR register to 0 (broadly disables some stuff)
+    //   mmio.Register(void, u32).init(mcr_addr).write(0);
 
-    // disable parity, set one stop bit, 8 bit width, aka 8n1
-    const uart_8n1 = uart_regs.uart_lcr{
-        .data_len_sel = 3,
-        .stop_bits_num = false, // 0 = 1 bit, 1 = 1.5 bits
-        .parity_en = false,
-        .even_parity_sel = false,
-        .break_ctrl = false,
-        .div_lat_access = false,
-    };
-    mmio.Register(void, uart_regs.uart_lcr).init(lcr_addr).write(uart_8n1);
+    //   // disable parity, set one stop bit, 8 bit width, aka 8n1
+    //   const uart_8n1 = uart_regs.uart_lcr{
+    //       .data_len_sel = 3,
+    //       .stop_bits_num = false, // 0 = 1 bit, 1 = 1.5 bits
+    //       .parity_en = false,
+    //       .even_parity_sel = false,
+    //       .break_ctrl = false,
+    //       .div_lat_access = false,
+    //   };
+    //   mmio.Register(void, uart_regs.uart_lcr).init(lcr_addr).write(uart_8n1);
 
-    setBaudrate(115200);
+    //   setBaudrate(115200);
 
-    // enable the FIFOs and tx empty trigger via their shadow registers
-    mmio.Register(void, uart_regs.uart_sfe).init(sfe_addr).write_raw(1);
-    mmio.Register(void, uart_regs.uart_srt).init(srt_addr).write_raw(1);
-    mmio.Register(void, uart_regs.uart_stet).init(stet_addr).write_raw(1);
+    //   // enable the FIFOs and tx empty trigger via their shadow registers
+    //   mmio.Register(void, uart_regs.uart_sfe).init(sfe_addr).write_raw(1);
+    //   mmio.Register(void, uart_regs.uart_srt).init(srt_addr).write_raw(1);
+    //   mmio.Register(void, uart_regs.uart_stet).init(stet_addr).write_raw(1);
 }
 
 fn putc(char: u8) void {

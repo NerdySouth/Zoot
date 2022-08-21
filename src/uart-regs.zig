@@ -1,14 +1,22 @@
-/// Address's and offsets for RK3399 UART registers and Base Addr's
-/// UART base MMIO addresses. To find these values, look in the Rk3399 TRM
-/// at the address mapping section.
+//! Address's and offsets for RK3399 UART registers and UART Base Addr's &
+//! UART base MMIO addresses. To find these values, look in the Rk3399 TRM
+//! at the address mapping section. We also define a type for each register
+//! that represents it as a struct with a u32 backing it. This allows us
+//! easy access to specific fields that correspond to the same or similar
+//! name as in the TRM.
+//!
+//! This info can be found under the UART chapter of the RK3399 TRM.
+//! I have noticed several different revisions of this TRM floating around,
+//! and i advise you get all the copies you can find. Some have different
+//! information entirely from others (some never mention the UART). If your TRM
+//! does not have a UART section, i recommend finding another revision or
+//! 'part x' sub revision of the TRM.`
 pub const UART0_BASE = 0xFF180000;
 pub const UART1_BASE = 0xFF190000;
 pub const UART2_BASE = 0xFF1A0000;
 pub const UART3_BASE = 0xFF1B0000;
 pub const UART4_BASE = 0xFF270000;
 
-/// Offsets from the UARTX_BASE addr for the given
-/// register by name
 pub const RBR_OFFSET = 0x0000;
 pub const THR_OFFSET = 0x0000;
 pub const DLL_OFFSET = 0x0000;
@@ -42,13 +50,6 @@ pub const CPR_OFFSET = 0x00F4;
 pub const UCV_OFFSET = 0x00F8;
 pub const CTR_OFFSET = 0x00FC;
 
-/// Register structs for UART's on the RK3399 platform
-/// This info can be found under the UART chapter of the RK3399 TRM.
-/// I have noticed several different revisions of this TRM floating around,
-/// and i advise you get all the copies you can find. Some have different
-/// information entirely from others (some never mention the UART). If your TRM
-/// does not have a UART section, i recommend finding another revision or
-/// 'part x' sub revision of the TRM.
 /// Register bitfield struct for the UART RBR, short for Read Buffer
 /// Register. Address: Operational Base + offset (0x0000)
 pub const uart_rbr = packed struct(u32) {

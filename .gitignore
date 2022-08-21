@@ -1,3 +1,8 @@
 
 zig-out/
 zig-cache/
+compiled/
+.DS_Store
+
+// Sometimes i dump straight to a txt for debugging, dont need those!
+*.txt
