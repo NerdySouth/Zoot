@@ -24,7 +24,7 @@ pub fn Register(comptime Read: type, comptime Write: type) type {
         // Since we are representing MMIO here, the addr of a register should be
         // known at compile time. This will complain if we try to pass it an
         // addr only known at runtime.
-        pub fn init(comptime addr: usize) Self {
+        pub fn init(comptime addr: u32) Self {
             // check if we are trying to make a register from the null addr
             comptime {
                 if (addr == 0) {

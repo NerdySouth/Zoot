@@ -132,7 +132,7 @@
 </span>
 <span class="line" id="L26">        <span class="tok-comment">// addr only known at runtime.</span>
 </span>
-<span class="line" id="L27">        <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">init</span>(<span class="tok-kw">comptime</span> addr: <span class="tok-type">usize</span>) Self {</span>
+<span class="line" id="L27">        <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">init</span>(<span class="tok-kw">comptime</span> addr: <span class="tok-type">u32</span>) Self {</span>
 <span class="line" id="L28">            <span class="tok-comment">// check if we are trying to make a register from the null addr</span>
 </span>
 <span class="line" id="L29">            <span class="tok-kw">comptime</span> {</span>

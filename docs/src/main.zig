@@ -130,8 +130,9 @@
 </span>
 <span class="line" id="L17"><span class="tok-comment">// tools happy. There's probably a more elegant way to do this...</span>
 </span>
-<span class="line" id="L18"><span class="tok-kw">const</span> mmio = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;mmio.zig&quot;</span>);</span>
-<span class="line" id="L19"><span class="tok-kw">const</span> uart = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;uart.zig&quot;</span>);</span>
+<span class="line" id="L18"><span class="tok-kw">const</span> gpio = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;gpio.zig&quot;</span>);</span>
+<span class="line" id="L19"><span class="tok-comment">//const uart = @import(&quot;uart.zig&quot;);</span>
+</span>
 <span class="line" id="L20"></span>
 <span class="line" id="L21"><span class="tok-kw">extern</span> <span class="tok-kw">var</span> __bss_start: <span class="tok-type">u8</span>;</span>
 <span class="line" id="L22"><span class="tok-kw">extern</span> <span class="tok-kw">var</span> __bss_end: <span class="tok-type">u8</span>;</span>
@@ -149,14 +150,21 @@
 <span class="line" id="L34">    <span class="tok-comment">// zero BSS</span>
 </span>
 <span class="line" id="L35">    <span class="tok-builtin">@memset</span>(<span class="tok-builtin">@as</span>(*<span class="tok-kw">volatile</span> [<span class="tok-number">1</span>]<span class="tok-type">u8</span>, &amp;__bss_start), <span class="tok-number">0</span>, <span class="tok-builtin">@ptrToInt</span>(&amp;__bss_end) - <span class="tok-builtin">@ptrToInt</span>(&amp;__bss_start));</span>
-<span class="line" id="L36">    uart.uartInit();</span>
-<span class="line" id="L37">    <span class="tok-kw">while</span> (<span class="tok-null">true</span>) {</span>
-<span class="line" id="L38">        delay();</span>
-<span class="line" id="L39">    }</span>
-<span class="line" id="L40">    <span class="tok-comment">//talker();</span>
+<span class="line" id="L36">    <span class="tok-comment">// uart.uartInit();</span>
 </span>
-<span class="line" id="L41">    <span class="tok-kw">unreachable</span>;</span>
-<span class="line" id="L42">}</span>
-<span class="line" id="L43"></span>
+<span class="line" id="L37">    <span class="tok-kw">var</span> rk_gpio = gpio.Gpio.init(gpio.GpioBase.zero);</span>
+<span class="line" id="L38">    <span class="tok-kw">const</span> led_mask = <span class="tok-builtin">@as</span>(<span class="tok-type">u32</span>, <span class="tok-number">0x800</span>);</span>
+<span class="line" id="L39">    rk_gpio.dir.write(led_mask);</span>
+<span class="line" id="L40">    <span class="tok-kw">while</span> (<span class="tok-null">true</span>) {</span>
+<span class="line" id="L41">        rk_gpio.data.write(led_mask);</span>
+<span class="line" id="L42">        delay();</span>
+<span class="line" id="L43">        rk_gpio.data.write(<span class="tok-number">0</span>);</span>
+<span class="line" id="L44">        delay();</span>
+<span class="line" id="L45">    }</span>
+<span class="line" id="L46">    <span class="tok-comment">//talker();</span>
+</span>
+<span class="line" id="L47">    <span class="tok-kw">unreachable</span>;</span>
+<span class="line" id="L48">}</span>
+<span class="line" id="L49"></span>
 </code></pre></body>
 </html>
