@@ -97,26 +97,29 @@
 </head>
 <body>
 <pre><code><span class="line" id="L1"><span class="tok-kw">const</span> mmio = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;mmio.zig&quot;</span>);</span>
-<span class="line" id="L2"></span>
-<span class="line" id="L3"><span class="tok-kw">pub</span> <span class="tok-kw">const</span> Gpio = <span class="tok-kw">struct</span> {</span>
-<span class="line" id="L4">    data: mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>),</span>
-<span class="line" id="L5">    dir: mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>),</span>
-<span class="line" id="L6"></span>
-<span class="line" id="L7">    <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">init</span>(<span class="tok-kw">comptime</span> base: GpioBase) Gpio {</span>
-<span class="line" id="L8">        <span class="tok-kw">return</span> Gpio{</span>
-<span class="line" id="L9">            .data = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base)),</span>
-<span class="line" id="L10">            .dir = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base) + <span class="tok-number">0x4</span>),</span>
-<span class="line" id="L11">        };</span>
-<span class="line" id="L12">    }</span>
-<span class="line" id="L13">};</span>
-<span class="line" id="L14"></span>
-<span class="line" id="L15"><span class="tok-kw">pub</span> <span class="tok-kw">const</span> GpioBase = <span class="tok-kw">enum</span>(<span class="tok-type">u32</span>) {</span>
-<span class="line" id="L16">    zero = <span class="tok-number">0xFF720000</span>,</span>
-<span class="line" id="L17">    one = <span class="tok-number">0xFF730000</span>,</span>
-<span class="line" id="L18">    two = <span class="tok-number">0xFF780000</span>,</span>
-<span class="line" id="L19">    three = <span class="tok-number">0xFF788000</span>,</span>
-<span class="line" id="L20">    four = <span class="tok-number">0xFF790000</span>,</span>
-<span class="line" id="L21">};</span>
-<span class="line" id="L22"></span>
+<span class="line" id="L2"><span class="tok-comment">/// A Gpio struct is made up of all the various MMIO registers associated with</span></span>
+<span class="line" id="L3"><span class="tok-comment">/// a given GpioBase. See the RK3399 TRM for more info. Chapter 20 in my copy.</span></span>
+<span class="line" id="L4"><span class="tok-kw">pub</span> <span class="tok-kw">const</span> Gpio = <span class="tok-kw">struct</span> {</span>
+<span class="line" id="L5">    data: mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>),</span>
+<span class="line" id="L6">    dir: mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>),</span>
+<span class="line" id="L7"></span>
+<span class="line" id="L8">    <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">init</span>(<span class="tok-kw">comptime</span> base: GpioBase) Gpio {</span>
+<span class="line" id="L9">        <span class="tok-kw">return</span> Gpio{</span>
+<span class="line" id="L10">            .data = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base)),</span>
+<span class="line" id="L11">            .dir = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base) + <span class="tok-number">0x4</span>),</span>
+<span class="line" id="L12">        };</span>
+<span class="line" id="L13">    }</span>
+<span class="line" id="L14">};</span>
+<span class="line" id="L15"></span>
+<span class="line" id="L16"><span class="tok-comment">/// A GpioBase is just an address to the base of a given set of GPIO MMIO</span></span>
+<span class="line" id="L17"><span class="tok-comment">/// registers as defined in the RK3399 TRM chapter 20.</span></span>
+<span class="line" id="L18"><span class="tok-kw">pub</span> <span class="tok-kw">const</span> GpioBase = <span class="tok-kw">enum</span>(<span class="tok-type">u32</span>) {</span>
+<span class="line" id="L19">    zero = <span class="tok-number">0xFF720000</span>,</span>
+<span class="line" id="L20">    one = <span class="tok-number">0xFF730000</span>,</span>
+<span class="line" id="L21">    two = <span class="tok-number">0xFF780000</span>,</span>
+<span class="line" id="L22">    three = <span class="tok-number">0xFF788000</span>,</span>
+<span class="line" id="L23">    four = <span class="tok-number">0xFF790000</span>,</span>
+<span class="line" id="L24">};</span>
+<span class="line" id="L25"></span>
 </code></pre></body>
 </html>
