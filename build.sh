@@ -13,7 +13,7 @@ elif [[ $1 == "-f" ]]; then
 elif [[ $1 == "-s" ]]; then 
     IMG=zoot-safe.img
     BUILD=safe
-elif [[ $1 == "-h]]:
+elif [[ $1 == "-h" ]]; then
     echo "Builds the zoot binary, and loads it to the SD card for the RockPro64.\nPossible flags:\n\t-> -sm : passes zig build the -Drelease-small=true\n\t-> -f : passes zig build the flag for a 'fast' build. See Zig docs.\n\t-> -s : passes zig build the flag for a 'safe' build. See Zig docs for more info."
     exit -1
 fi

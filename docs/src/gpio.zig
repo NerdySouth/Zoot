@@ -103,23 +103,24 @@
 <span class="line" id="L5">    data: mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>),</span>
 <span class="line" id="L6">    dir: mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>),</span>
 <span class="line" id="L7"></span>
-<span class="line" id="L8">    <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">init</span>(<span class="tok-kw">comptime</span> base: GpioBase) Gpio {</span>
-<span class="line" id="L9">        <span class="tok-kw">return</span> Gpio{</span>
-<span class="line" id="L10">            .data = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base)),</span>
-<span class="line" id="L11">            .dir = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base) + <span class="tok-number">0x4</span>),</span>
-<span class="line" id="L12">        };</span>
-<span class="line" id="L13">    }</span>
-<span class="line" id="L14">};</span>
-<span class="line" id="L15"></span>
-<span class="line" id="L16"><span class="tok-comment">/// A GpioBase is just an address to the base of a given set of GPIO MMIO</span></span>
-<span class="line" id="L17"><span class="tok-comment">/// registers as defined in the RK3399 TRM chapter 20.</span></span>
-<span class="line" id="L18"><span class="tok-kw">pub</span> <span class="tok-kw">const</span> GpioBase = <span class="tok-kw">enum</span>(<span class="tok-type">u32</span>) {</span>
-<span class="line" id="L19">    zero = <span class="tok-number">0xFF720000</span>,</span>
-<span class="line" id="L20">    one = <span class="tok-number">0xFF730000</span>,</span>
-<span class="line" id="L21">    two = <span class="tok-number">0xFF780000</span>,</span>
-<span class="line" id="L22">    three = <span class="tok-number">0xFF788000</span>,</span>
-<span class="line" id="L23">    four = <span class="tok-number">0xFF790000</span>,</span>
-<span class="line" id="L24">};</span>
-<span class="line" id="L25"></span>
+<span class="line" id="L8">    <span class="tok-comment">/// Initialize a Gpio instance with a given GpioBase.</span></span>
+<span class="line" id="L9">    <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">init</span>(<span class="tok-kw">comptime</span> base: GpioBase) Gpio {</span>
+<span class="line" id="L10">        <span class="tok-kw">return</span> Gpio{</span>
+<span class="line" id="L11">            .data = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base)),</span>
+<span class="line" id="L12">            .dir = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(<span class="tok-builtin">@enumToInt</span>(base) + <span class="tok-number">0x4</span>),</span>
+<span class="line" id="L13">        };</span>
+<span class="line" id="L14">    }</span>
+<span class="line" id="L15">};</span>
+<span class="line" id="L16"></span>
+<span class="line" id="L17"><span class="tok-comment">/// A GpioBase is just an address to the base of a given set of GPIO MMIO</span></span>
+<span class="line" id="L18"><span class="tok-comment">/// registers as defined in the RK3399 TRM chapter 20.</span></span>
+<span class="line" id="L19"><span class="tok-kw">pub</span> <span class="tok-kw">const</span> GpioBase = <span class="tok-kw">enum</span>(<span class="tok-type">u32</span>) {</span>
+<span class="line" id="L20">    zero = <span class="tok-number">0xFF720000</span>,</span>
+<span class="line" id="L21">    one = <span class="tok-number">0xFF730000</span>,</span>
+<span class="line" id="L22">    two = <span class="tok-number">0xFF780000</span>,</span>
+<span class="line" id="L23">    three = <span class="tok-number">0xFF788000</span>,</span>
+<span class="line" id="L24">    four = <span class="tok-number">0xFF790000</span>,</span>
+<span class="line" id="L25">};</span>
+<span class="line" id="L26"></span>
 </code></pre></body>
 </html>

@@ -5,6 +5,7 @@ pub const Gpio = struct {
     data: mmio.Register(u32, u32),
     dir: mmio.Register(u32, u32),
 
+    /// Initialize a Gpio instance with a given GpioBase.
     pub fn init(comptime base: GpioBase) Gpio {
         return Gpio{
             .data = mmio.Register(u32, u32).init(@enumToInt(base)),

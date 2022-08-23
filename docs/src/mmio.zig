@@ -205,7 +205,7 @@
 <span class="line" id="L85">            self.raw_ptr.* = <span class="tok-builtin">@bitCast</span>(<span class="tok-type">u32</span>, val);</span>
 <span class="line" id="L86">        }</span>
 <span class="line" id="L87"></span>
-<span class="line" id="L88">        <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">modify</span>(self: Self, new_val: <span class="tok-kw">anytype</span>) <span class="tok-type">void</span> {</span>
+<span class="line" id="L88">        <span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">modify</span>(self: Self, new_val: Write) <span class="tok-type">void</span> {</span>
 <span class="line" id="L89">            <span class="tok-kw">comptime</span> {</span>
 <span class="line" id="L90">                <span class="tok-kw">if</span> (Read != Write) {</span>
 <span class="line" id="L91">                    <span class="tok-builtin">@compileError</span>(</span>
@@ -217,20 +217,10 @@
 <span class="line" id="L95">                }</span>
 <span class="line" id="L96">            }</span>
 <span class="line" id="L97">            <span class="tok-kw">var</span> old_val = self.read();</span>
-<span class="line" id="L98">            <span class="tok-kw">const</span> info = <span class="tok-builtin">@typeInfo</span>(<span class="tok-builtin">@TypeOf</span>(new_val));</span>
-<span class="line" id="L99">            <span class="tok-comment">// for every field on our new val, change the value on old val</span>
-</span>
-<span class="line" id="L100">            <span class="tok-comment">// to match it</span>
-</span>
-<span class="line" id="L101">            <span class="tok-kw">inline</span> <span class="tok-kw">for</span> (info.Struct.fields) |field| {</span>
-<span class="line" id="L102">                <span class="tok-comment">// change the field with old_val to new_val</span>
-</span>
-<span class="line" id="L103">                <span class="tok-builtin">@field</span>(old_val, field.name) = <span class="tok-builtin">@field</span>(new_val, field.name);</span>
-<span class="line" id="L104">            }</span>
-<span class="line" id="L105">            self.write(old_val);</span>
-<span class="line" id="L106">        }</span>
-<span class="line" id="L107">    };</span>
-<span class="line" id="L108">}</span>
-<span class="line" id="L109"></span>
+<span class="line" id="L98">            self.write(old_val | new_val);</span>
+<span class="line" id="L99">        }</span>
+<span class="line" id="L100">    };</span>
+<span class="line" id="L101">}</span>
+<span class="line" id="L102"></span>
 </code></pre></body>
 </html>

@@ -85,7 +85,7 @@ pub fn Register(comptime Read: type, comptime Write: type) type {
             self.raw_ptr.* = @bitCast(u32, val);
         }
 
-        pub fn modify(self: Self, new_val: anytype) void {
+        pub fn modify(self: Self, new_val: Write) void {
             comptime {
                 if (Read != Write) {
                     @compileError(
@@ -95,14 +95,7 @@ pub fn Register(comptime Read: type, comptime Write: type) type {
                 }
             }
             var old_val = self.read();
-            const info = @typeInfo(@TypeOf(new_val));
-            // for every field on our new val, change the value on old val
-            // to match it
-            inline for (info.Struct.fields) |field| {
-                // change the field with old_val to new_val
-                @field(old_val, field.name) = @field(new_val, field.name);
-            }
-            self.write(old_val);
+            self.write(old_val | new_val);
         }
     };
 }

@@ -21,17 +21,17 @@ const mmio = @import("mmio.zig");
 const uart_clock = 24000000;
 
 const uart_base = uart_regs.UART2_BASE;
-const ier_addr = uart_base + uart_regs.IER_OFFSET;
-const srr_addr = uart_base + uart_regs.SRR_OFFSET;
-const mcr_addr = uart_base + uart_regs.MCR_OFFSET;
-const lcr_addr = uart_base + uart_regs.LCR_OFFSET;
-const dll_addr = uart_base + uart_regs.DLL_OFFSET;
-const dlh_addr = uart_base + uart_regs.DLH_OFFSET;
-const sfe_addr = uart_base + uart_regs.SFE_OFFSET;
-const srt_addr = uart_base + uart_regs.SRT_OFFSET;
-const stet_addr = uart_base + uart_regs.STET_OFFSET;
-const usr_addr = uart_base + uart_regs.USR_OFFSET;
-const thr_addr = uart_base + uart_regs.THR_OFFSET;
+const ier_addr = uart_base | uart_regs.IER_OFFSET;
+const srr_addr = uart_base | uart_regs.SRR_OFFSET;
+const mcr_addr = uart_base | uart_regs.MCR_OFFSET;
+const lcr_addr = uart_base | uart_regs.LCR_OFFSET;
+const dll_addr = uart_base | uart_regs.DLL_OFFSET;
+const dlh_addr = uart_base | uart_regs.DLH_OFFSET;
+const sfe_addr = uart_base | uart_regs.SFE_OFFSET;
+const srt_addr = uart_base | uart_regs.SRT_OFFSET;
+const stet_addr = uart_base | uart_regs.STET_OFFSET;
+const usr_addr = uart_base | uart_regs.USR_OFFSET;
+const thr_addr = uart_base | uart_regs.THR_OFFSET;
 
 /// Sets the GPIO pins 8 and 10 up for use by the UART2
 /// See page 204 in TRM. Note that GRF is General Register Files.
@@ -51,7 +51,7 @@ fn uartIOMux() void {
     const register = iomux_regs.gpio_4c_reg;
     var reg_val = register.read();
     // enable write to proper bits
-    reg_val.write_enable = (reg_val.write_enable & 0xA0);
+    reg_val.write_enable &= 0xA0;
     // can now switch mode to UART2
     reg_val.sel_3 = 1;
     reg_val.sel_4 = 1;
@@ -72,15 +72,15 @@ fn setBaudrate(baud: u32) void {
     const rate = uart_clock / 16 / baud;
 
     // write to div_lat_access field to allow DLL and DLH writes
-    const lcr_reg = mmio.Register(uart_regs.uart_lcr, uart_regs.uart_lcr).init(lcr_addr);
-    lcr_reg.write_raw(0x80);
+    const lcr_reg = mmio.Register(u32, u32).init(lcr_addr);
+    lcr_reg.modify(0x80);
 
     // write the rate to the DLL and DLH registers
-    mmio.Register(void, uart_regs.uart_dll).init(dll_addr).write_raw(rate & 0xff);
-    mmio.Register(void, uart_regs.uart_dlh).init(dlh_addr).write_raw((rate >> 8) & 0xff);
+    mmio.Register(void, u32).init(dll_addr).write(rate & 0xff);
+    mmio.Register(void, u32).init(dlh_addr).write((rate >> 8) & 0xff);
 
     // clear div_lat_access field to prevent future DLL and DLH writes
-    lcr_reg.write_raw(lcr_reg.read_raw() & 0x3);
+    lcr_reg.write(lcr_reg.read() & ~(@as(u32, 0x80)));
 }
 
 /// Initialization function for the uart
@@ -89,49 +89,42 @@ pub fn uartInit() void {
     uartIOMux();
 
     // disable all interrupts
-    //    mmio.Register(void, uart_regs.uart_ier).init(ier_addr).write_raw(0);
+    mmio.Register(void, u32).init(ier_addr).write_raw(0);
 
-    //   // Reset the uart and both fifos
-    //   const uart_reset_mask = uart_regs.uart_srr{
-    //       .uart_reset = true,
-    //       .rcvr_fifo_reset = true,
-    //       .xmit_fifo_reset = true,
-    //   };
-    //   mmio.Register(void, uart_regs.uart_srr).init(srr_addr).write(uart_reset_mask);
+    // Reset the uart and both fifos
+    mmio.Register(void, u32).init(srr_addr).write(0x1 | 0x2 | 0x4);
 
-    //   // set MCR register to 0 (broadly disables some stuff)
-    //   mmio.Register(void, u32).init(mcr_addr).write(0);
+    // set MCR register to 0 (broadly disables some stuff)
+    mmio.Register(void, u32).init(mcr_addr).write(0);
 
-    //   // disable parity, set one stop bit, 8 bit width, aka 8n1
-    //   const uart_8n1 = uart_regs.uart_lcr{
-    //       .data_len_sel = 3,
-    //       .stop_bits_num = false, // 0 = 1 bit, 1 = 1.5 bits
-    //       .parity_en = false,
-    //       .even_parity_sel = false,
-    //       .break_ctrl = false,
-    //       .div_lat_access = false,
-    //   };
-    //   mmio.Register(void, uart_regs.uart_lcr).init(lcr_addr).write(uart_8n1);
+    // disable parity, set one stop bit, 8 bit width, aka 8n1
+    const uart_8n1 = uart_regs.uart_lcr{
+        .data_len_sel = 3,
+        .stop_bits_num = false, // 0 = 1 bit, 1 = 1.5 bits
+        .parity_en = false,
+        .even_parity_sel = false,
+        .break_ctrl = false,
+        .div_lat_access = false,
+    };
+    mmio.Register(void, uart_regs.uart_lcr).init(lcr_addr).write(uart_8n1);
 
-    //   setBaudrate(115200);
+    setBaudrate(115200);
 
-    //   // enable the FIFOs and tx empty trigger via their shadow registers
-    //   mmio.Register(void, uart_regs.uart_sfe).init(sfe_addr).write_raw(1);
-    //   mmio.Register(void, uart_regs.uart_srt).init(srt_addr).write_raw(1);
-    //   mmio.Register(void, uart_regs.uart_stet).init(stet_addr).write_raw(1);
+    // enable the FIFOs and tx empty trigger via their shadow registers
+    mmio.Register(void, u32).init(sfe_addr).write(1);
+    mmio.Register(void, u32).init(srt_addr).write(1);
+    mmio.Register(void, u32).init(stet_addr).write(1);
 }
 
 fn putc(char: u8) void {
-    const usr_reg = mmio.Register(uart_regs.uart_usr, void).init(usr_addr);
+    const usr_reg = mmio.Register(u32, void).init(usr_addr);
 
     // wait until the transmit fifo is empty (we are only sending one char
     // at a time right now.
-    while (!usr_reg.read().trans_fifo_empty) {}
+    while ((usr_reg.read() & 0x1) != 0x1) {}
 
-    const xmit_reg = mmio.Register(void, uart_regs.uart_thr).init(thr_addr);
-    xmit_reg.write(.{
-        .data_output = char,
-    });
+    const xmit_reg = mmio.Register(void, u32).init(thr_addr);
+    xmit_reg.write(@as(u32, char));
 }
 
 pub fn print(str: []const u8) void {

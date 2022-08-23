@@ -96,75 +96,45 @@
     </style>
 </head>
 <body>
-<pre><code><span class="line" id="L1"><span class="tok-comment">// This is the real entry point for our program. It simply jumps (or branches,</span>
+<pre><code><span class="line" id="L1"><span class="tok-kw">const</span> gpio = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;gpio.zig&quot;</span>);</span>
+<span class="line" id="L2"><span class="tok-kw">const</span> uart = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;uart.zig&quot;</span>);</span>
+<span class="line" id="L3"></span>
+<span class="line" id="L4"><span class="tok-kw">extern</span> <span class="tok-kw">var</span> __bss_start: <span class="tok-type">u8</span>;</span>
+<span class="line" id="L5"><span class="tok-kw">extern</span> <span class="tok-kw">var</span> __bss_end: <span class="tok-type">u8</span>;</span>
+<span class="line" id="L6"></span>
+<span class="line" id="L7"><span class="tok-kw">fn</span> <span class="tok-fn">delay</span>() <span class="tok-type">void</span> {</span>
+<span class="line" id="L8">    <span class="tok-kw">var</span> def_delay: <span class="tok-type">usize</span> = <span class="tok-number">1000000</span>;</span>
+<span class="line" id="L9">    <span class="tok-kw">const</span> ptr: *<span class="tok-kw">volatile</span> <span class="tok-type">usize</span> = &amp;def_delay;</span>
+<span class="line" id="L10"></span>
+<span class="line" id="L11">    <span class="tok-kw">while</span> (def_delay &gt; <span class="tok-number">0</span>) {</span>
+<span class="line" id="L12">        ptr.* -= <span class="tok-number">1</span>;</span>
+<span class="line" id="L13">    }</span>
+<span class="line" id="L14">}</span>
+<span class="line" id="L15"></span>
+<span class="line" id="L16"><span class="tok-kw">fn</span> <span class="tok-fn">talker</span>() <span class="tok-type">void</span> {</span>
+<span class="line" id="L17">    <span class="tok-kw">while</span> (<span class="tok-null">true</span>) {</span>
+<span class="line" id="L18">        uart.print(<span class="tok-str">&quot;Zoot\n&quot;</span>);</span>
+<span class="line" id="L19">    }</span>
+<span class="line" id="L20">}</span>
+<span class="line" id="L21"></span>
+<span class="line" id="L22"><span class="tok-comment">/// Zig entry point for the first bit of user code loaded by the BROM into the</span></span>
+<span class="line" id="L23"><span class="tok-comment">/// 192K SRAM. The main goal is to initialize DDR Memory, then we can load</span></span>
+<span class="line" id="L24"><span class="tok-comment">/// programs to RAM and run there.</span></span>
+<span class="line" id="L25"><span class="tok-kw">export</span> <span class="tok-kw">fn</span> <span class="tok-fn">zigMain</span>() <span class="tok-type">noreturn</span> {</span>
+<span class="line" id="L26">    <span class="tok-comment">// zero BSS</span>
 </span>
-<span class="line" id="L2"><span class="tok-comment">// using the `b` instruction) to our main function, `zigMain`, written</span>
-</span>
-<span class="line" id="L3"><span class="tok-comment">// in Zig below.</span>
-</span>
-<span class="line" id="L4"><span class="tok-comment">//</span>
-</span>
-<span class="line" id="L5"><span class="tok-comment">// One important thing here is that I place this code in the `.text.boot`</span>
-</span>
-<span class="line" id="L6"><span class="tok-comment">// section of the resulting object. The linker script, `simplest.ld`, makes sure</span>
-</span>
-<span class="line" id="L7"><span class="tok-comment">// this section is placed right at the beginning of the resulting binary. That's</span>
-</span>
-<span class="line" id="L8"><span class="tok-comment">// what I want, because the RockPro64 will start running from the beginning</span>
-</span>
-<span class="line" id="L9"><span class="tok-comment">// of the binary.</span>
-</span>
-<span class="line" id="L10"><span class="tok-comment">//</span>
-</span>
-<span class="line" id="L11"><span class="tok-comment">// Maybe important: the linker will look (by default) for the `_start` symbol as</span>
-</span>
-<span class="line" id="L12"><span class="tok-comment">// the program entry point. As far as I understand, though, this isn't relevant</span>
-</span>
-<span class="line" id="L13"><span class="tok-comment">// for this program, because the RockPro64 will start running from the first</span>
-</span>
-<span class="line" id="L14"><span class="tok-comment">// byte of the image. I am really defining the entry point by using the</span>
-</span>
-<span class="line" id="L15"><span class="tok-comment">// `.text.boot`, and `_start` is effectivelly ignored. However, the linker</span>
-</span>
-<span class="line" id="L16"><span class="tok-comment">// will complain if it can't find `_start`, so I define it here to make our</span>
-</span>
-<span class="line" id="L17"><span class="tok-comment">// tools happy. There's probably a more elegant way to do this...</span>
-</span>
-<span class="line" id="L18"><span class="tok-kw">const</span> gpio = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;gpio.zig&quot;</span>);</span>
-<span class="line" id="L19"><span class="tok-comment">//const uart = @import(&quot;uart.zig&quot;);</span>
-</span>
-<span class="line" id="L20"></span>
-<span class="line" id="L21"><span class="tok-kw">extern</span> <span class="tok-kw">var</span> __bss_start: <span class="tok-type">u8</span>;</span>
-<span class="line" id="L22"><span class="tok-kw">extern</span> <span class="tok-kw">var</span> __bss_end: <span class="tok-type">u8</span>;</span>
-<span class="line" id="L23"></span>
-<span class="line" id="L24"><span class="tok-kw">fn</span> <span class="tok-fn">delay</span>() <span class="tok-type">void</span> {</span>
-<span class="line" id="L25">    <span class="tok-kw">var</span> def_delay: <span class="tok-type">usize</span> = <span class="tok-number">1000000</span>;</span>
-<span class="line" id="L26">    <span class="tok-kw">const</span> ptr: *<span class="tok-kw">volatile</span> <span class="tok-type">usize</span> = &amp;def_delay;</span>
-<span class="line" id="L27"></span>
-<span class="line" id="L28">    <span class="tok-kw">while</span> (def_delay &gt; <span class="tok-number">0</span>) {</span>
-<span class="line" id="L29">        ptr.* -= <span class="tok-number">1</span>;</span>
-<span class="line" id="L30">    }</span>
-<span class="line" id="L31">}</span>
-<span class="line" id="L32"></span>
-<span class="line" id="L33"><span class="tok-kw">export</span> <span class="tok-kw">fn</span> <span class="tok-fn">zigMain</span>() <span class="tok-type">noreturn</span> {</span>
-<span class="line" id="L34">    <span class="tok-comment">// zero BSS</span>
-</span>
-<span class="line" id="L35">    <span class="tok-builtin">@memset</span>(<span class="tok-builtin">@as</span>(*<span class="tok-kw">volatile</span> [<span class="tok-number">1</span>]<span class="tok-type">u8</span>, &amp;__bss_start), <span class="tok-number">0</span>, <span class="tok-builtin">@ptrToInt</span>(&amp;__bss_end) - <span class="tok-builtin">@ptrToInt</span>(&amp;__bss_start));</span>
-<span class="line" id="L36">    <span class="tok-comment">// uart.uartInit();</span>
-</span>
-<span class="line" id="L37">    <span class="tok-kw">var</span> rk_gpio = gpio.Gpio.init(gpio.GpioBase.zero);</span>
-<span class="line" id="L38">    <span class="tok-kw">const</span> led_mask = <span class="tok-builtin">@as</span>(<span class="tok-type">u32</span>, <span class="tok-number">0x800</span>);</span>
-<span class="line" id="L39">    rk_gpio.dir.write(led_mask);</span>
-<span class="line" id="L40">    <span class="tok-kw">while</span> (<span class="tok-null">true</span>) {</span>
-<span class="line" id="L41">        rk_gpio.data.write(led_mask);</span>
-<span class="line" id="L42">        delay();</span>
-<span class="line" id="L43">        rk_gpio.data.write(<span class="tok-number">0</span>);</span>
-<span class="line" id="L44">        delay();</span>
-<span class="line" id="L45">    }</span>
-<span class="line" id="L46">    <span class="tok-comment">//talker();</span>
-</span>
-<span class="line" id="L47">    <span class="tok-kw">unreachable</span>;</span>
-<span class="line" id="L48">}</span>
-<span class="line" id="L49"></span>
+<span class="line" id="L27">    <span class="tok-builtin">@memset</span>(<span class="tok-builtin">@as</span>(*<span class="tok-kw">volatile</span> [<span class="tok-number">1</span>]<span class="tok-type">u8</span>, &amp;__bss_start), <span class="tok-number">0</span>, <span class="tok-builtin">@ptrToInt</span>(&amp;__bss_end) - <span class="tok-builtin">@ptrToInt</span>(&amp;__bss_start));</span>
+<span class="line" id="L28">    uart.uartInit();</span>
+<span class="line" id="L29">    <span class="tok-kw">var</span> rk_gpio = gpio.Gpio.init(gpio.GpioBase.zero);</span>
+<span class="line" id="L30">    <span class="tok-kw">const</span> led_mask = <span class="tok-builtin">@as</span>(<span class="tok-type">u32</span>, <span class="tok-number">0x800</span>);</span>
+<span class="line" id="L31">    rk_gpio.dir.write(led_mask);</span>
+<span class="line" id="L32">    rk_gpio.data.write(led_mask);</span>
+<span class="line" id="L33">    delay();</span>
+<span class="line" id="L34">    rk_gpio.data.write(<span class="tok-number">0</span>);</span>
+<span class="line" id="L35">    delay();</span>
+<span class="line" id="L36">    talker();</span>
+<span class="line" id="L37">    <span class="tok-kw">unreachable</span>;</span>
+<span class="line" id="L38">}</span>
+<span class="line" id="L39"></span>
 </code></pre></body>
 </html>
