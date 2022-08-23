@@ -1,5 +1,5 @@
 const uart_regs = @import("uart-regs.zig");
-const iomux_regs = @import("iomux-regs.zig");
+const iomux = @import("iomux-regs.zig");
 const mmio = @import("mmio.zig");
 
 /// RK3399 UART's
@@ -48,18 +48,15 @@ fn uartIOMux() void {
     //
     // It does appear that the TRM says we could use the GPIO_4B GRF, but
     // it appears to  work just fine using this method as well.
-    const register = iomux_regs.gpio_4c_reg;
-    var reg_val = register.read();
+    const register = iomux.Register.init(iomux.GRFAddr.GPIO4C);
+    var reg_val: u32 = 0;
     // enable write to proper bits
-    reg_val.write_enable &= 0xA0;
+    reg_val |= (1 << 22);
+    reg_val |= (1 << 24);
     // can now switch mode to UART2
-    reg_val.sel_3 = 1;
-    reg_val.sel_4 = 1;
-    register.write(reg_val);
-
-    // close off bit write access
-    reg_val.write_enable = 0;
-    register.write(reg_val);
+    reg_val |= (1 << 6);
+    reg_val = (1 << 8);
+    register.reg.write(reg_val);
 }
 
 fn setBaudrate(baud: u32) void {

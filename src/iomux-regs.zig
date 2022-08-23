@@ -1,4 +1,4 @@
-const mmio_register = @import("mmio.zig");
+const mmio = @import("mmio.zig");
 /// IOMUX: IO Multiplexing
 /// This is for the problem of having more onboard perpherals/services than
 /// we have pins for. Although each pin on the system can only be used for
@@ -6,10 +6,24 @@ const mmio_register = @import("mmio.zig");
 /// or service it should perform internally.
 /// See the GRF (General Register Files) chapter of the RK3399 TRM for more
 /// info
-pub const GRF_BASE = 0xFF770000;
-pub const GPIO4B_OFFSET = 0xE024;
-pub const GPIO4C_OFFSET = 0xE028;
-pub const PMU_GRF_BASE = 0xFF320000;
+const GRF_BASE = 0xFF770000;
+const IOMUX_BASE = 0xFF77E000;
+const GPIO4B_OFFSET = 0xE024;
+const GPIO4C_OFFSET = 0xE028;
+const PMU_GRF_BASE = 0xFF320000;
+
+pub const Register = struct {
+    reg: mmio.Register(u32, u32),
+
+    pub fn init(comptime addr: GRFAddr) Register {
+        return Register{ .reg = mmio.Register(u32, u32).init(@enumToInt(addr)) };
+    }
+};
+
+pub const GRFAddr = enum(u32) {
+    GPIO4B = GRF_BASE + GPIO4B_OFFSET,
+    GPIO4C = GRF_BASE + GPIO4C_OFFSET,
+};
 
 /// GPIO4B IOMUX Control Register
 const gpio_4b_grf = packed struct(u32) {
@@ -23,9 +37,6 @@ const gpio_4b_grf = packed struct(u32) {
     write_enable: u16,
 };
 
-/// Create a mmio register struct for the gpio 4B grf register
-pub const gpio_4b_reg = mmio_register.Register(gpio_4b_grf, gpio_4b_grf).init(GRF_BASE + GPIO4B_OFFSET);
-
 /// GPIO4C IOMUX Control Register
 pub const gpio_4c_grf = packed struct(u32) {
     sel_0: u2,
@@ -38,5 +49,3 @@ pub const gpio_4c_grf = packed struct(u32) {
     sel_7: u2,
     write_enable: u16,
 };
-
-pub const gpio_4c_reg = mmio_register.Register(gpio_4c_grf, gpio_4c_grf).init(GRF_BASE + GPIO4C_OFFSET);

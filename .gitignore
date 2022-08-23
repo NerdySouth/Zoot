@@ -6,3 +6,4 @@ compiled/
 
 // Sometimes i dump straight to a txt for debugging, dont need those!
 *.txt
+*.list

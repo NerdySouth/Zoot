@@ -97,7 +97,7 @@
 </head>
 <body>
 <pre><code><span class="line" id="L1"><span class="tok-kw">const</span> uart_regs = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;uart-regs.zig&quot;</span>);</span>
-<span class="line" id="L2"><span class="tok-kw">const</span> iomux_regs = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;iomux-regs.zig&quot;</span>);</span>
+<span class="line" id="L2"><span class="tok-kw">const</span> iomux = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;iomux-regs.zig&quot;</span>);</span>
 <span class="line" id="L3"><span class="tok-kw">const</span> mmio = <span class="tok-builtin">@import</span>(<span class="tok-str">&quot;mmio.zig&quot;</span>);</span>
 <span class="line" id="L4"></span>
 <span class="line" id="L5"><span class="tok-comment">/// RK3399 UART's</span></span>
@@ -154,111 +154,107 @@
 </span>
 <span class="line" id="L50">    <span class="tok-comment">// it appears to  work just fine using this method as well.</span>
 </span>
-<span class="line" id="L51">    <span class="tok-kw">const</span> register = iomux_regs.gpio_4c_reg;</span>
-<span class="line" id="L52">    <span class="tok-kw">var</span> reg_val = register.read();</span>
+<span class="line" id="L51">    <span class="tok-kw">const</span> register = iomux.Register.init(iomux.GRFAddr.GPIO4C);</span>
+<span class="line" id="L52">    <span class="tok-kw">var</span> reg_val: <span class="tok-type">u32</span> = <span class="tok-number">0</span>;</span>
 <span class="line" id="L53">    <span class="tok-comment">// enable write to proper bits</span>
 </span>
-<span class="line" id="L54">    reg_val.write_enable &amp;= <span class="tok-number">0xA0</span>;</span>
-<span class="line" id="L55">    <span class="tok-comment">// can now switch mode to UART2</span>
+<span class="line" id="L54">    reg_val |= (<span class="tok-number">1</span> &lt;&lt; <span class="tok-number">22</span>);</span>
+<span class="line" id="L55">    reg_val |= (<span class="tok-number">1</span> &lt;&lt; <span class="tok-number">24</span>);</span>
+<span class="line" id="L56">    <span class="tok-comment">// can now switch mode to UART2</span>
 </span>
-<span class="line" id="L56">    reg_val.sel_3 = <span class="tok-number">1</span>;</span>
-<span class="line" id="L57">    reg_val.sel_4 = <span class="tok-number">1</span>;</span>
-<span class="line" id="L58">    register.write(reg_val);</span>
-<span class="line" id="L59"></span>
-<span class="line" id="L60">    <span class="tok-comment">// close off bit write access</span>
+<span class="line" id="L57">    reg_val |= (<span class="tok-number">1</span> &lt;&lt; <span class="tok-number">6</span>);</span>
+<span class="line" id="L58">    reg_val = (<span class="tok-number">1</span> &lt;&lt; <span class="tok-number">8</span>);</span>
+<span class="line" id="L59">    register.reg.write(reg_val);</span>
+<span class="line" id="L60">}</span>
+<span class="line" id="L61"></span>
+<span class="line" id="L62"><span class="tok-kw">fn</span> <span class="tok-fn">setBaudrate</span>(baud: <span class="tok-type">u32</span>) <span class="tok-type">void</span> {</span>
+<span class="line" id="L63">    <span class="tok-comment">// per rk3399 TRM:</span>
 </span>
-<span class="line" id="L61">    reg_val.write_enable = <span class="tok-number">0</span>;</span>
-<span class="line" id="L62">    register.write(reg_val);</span>
-<span class="line" id="L63">}</span>
-<span class="line" id="L64"></span>
-<span class="line" id="L65"><span class="tok-kw">fn</span> <span class="tok-fn">setBaudrate</span>(baud: <span class="tok-type">u32</span>) <span class="tok-type">void</span> {</span>
-<span class="line" id="L66">    <span class="tok-comment">// per rk3399 TRM:</span>
+<span class="line" id="L64">    <span class="tok-comment">// Baudrate = (serial clock freq) / (16 * divisor)</span>
 </span>
-<span class="line" id="L67">    <span class="tok-comment">// Baudrate = (serial clock freq) / (16 * divisor)</span>
+<span class="line" id="L65">    <span class="tok-comment">//</span>
 </span>
-<span class="line" id="L68">    <span class="tok-comment">//</span>
+<span class="line" id="L66">    <span class="tok-comment">// We can solve for divisor given a baudrate since we know the clock freq.</span>
 </span>
-<span class="line" id="L69">    <span class="tok-comment">// We can solve for divisor given a baudrate since we know the clock freq.</span>
+<span class="line" id="L67">    <span class="tok-comment">// where divisor is represented by a 32 bit integer stored in the DLL</span>
 </span>
-<span class="line" id="L70">    <span class="tok-comment">// where divisor is represented by a 32 bit integer stored in the DLL</span>
+<span class="line" id="L68">    <span class="tok-comment">// and DLH registers.</span>
 </span>
-<span class="line" id="L71">    <span class="tok-comment">// and DLH registers.</span>
+<span class="line" id="L69">    <span class="tok-kw">const</span> rate = uart_clock / <span class="tok-number">16</span> / baud;</span>
+<span class="line" id="L70"></span>
+<span class="line" id="L71">    <span class="tok-comment">// write to div_lat_access field to allow DLL and DLH writes</span>
 </span>
-<span class="line" id="L72">    <span class="tok-kw">const</span> rate = uart_clock / <span class="tok-number">16</span> / baud;</span>
-<span class="line" id="L73"></span>
-<span class="line" id="L74">    <span class="tok-comment">// write to div_lat_access field to allow DLL and DLH writes</span>
+<span class="line" id="L72">    <span class="tok-kw">const</span> lcr_reg = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(lcr_addr);</span>
+<span class="line" id="L73">    lcr_reg.modify(<span class="tok-number">0x80</span>);</span>
+<span class="line" id="L74"></span>
+<span class="line" id="L75">    <span class="tok-comment">// write the rate to the DLL and DLH registers</span>
 </span>
-<span class="line" id="L75">    <span class="tok-kw">const</span> lcr_reg = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">u32</span>).init(lcr_addr);</span>
-<span class="line" id="L76">    lcr_reg.modify(<span class="tok-number">0x80</span>);</span>
-<span class="line" id="L77"></span>
-<span class="line" id="L78">    <span class="tok-comment">// write the rate to the DLL and DLH registers</span>
+<span class="line" id="L76">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(dll_addr).write(rate &amp; <span class="tok-number">0xff</span>);</span>
+<span class="line" id="L77">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(dlh_addr).write((rate &gt;&gt; <span class="tok-number">8</span>) &amp; <span class="tok-number">0xff</span>);</span>
+<span class="line" id="L78"></span>
+<span class="line" id="L79">    <span class="tok-comment">// clear div_lat_access field to prevent future DLL and DLH writes</span>
 </span>
-<span class="line" id="L79">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(dll_addr).write(rate &amp; <span class="tok-number">0xff</span>);</span>
-<span class="line" id="L80">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(dlh_addr).write((rate &gt;&gt; <span class="tok-number">8</span>) &amp; <span class="tok-number">0xff</span>);</span>
-<span class="line" id="L81"></span>
-<span class="line" id="L82">    <span class="tok-comment">// clear div_lat_access field to prevent future DLL and DLH writes</span>
+<span class="line" id="L80">    lcr_reg.write(lcr_reg.read() &amp; ~(<span class="tok-builtin">@as</span>(<span class="tok-type">u32</span>, <span class="tok-number">0x80</span>)));</span>
+<span class="line" id="L81">}</span>
+<span class="line" id="L82"></span>
+<span class="line" id="L83"><span class="tok-comment">/// Initialization function for the uart</span></span>
+<span class="line" id="L84"><span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">uartInit</span>() <span class="tok-type">void</span> {</span>
+<span class="line" id="L85">    <span class="tok-comment">// setup GPIO pin multiplex functions for UART2</span>
 </span>
-<span class="line" id="L83">    lcr_reg.write(lcr_reg.read() &amp; ~(<span class="tok-builtin">@as</span>(<span class="tok-type">u32</span>, <span class="tok-number">0x80</span>)));</span>
-<span class="line" id="L84">}</span>
-<span class="line" id="L85"></span>
-<span class="line" id="L86"><span class="tok-comment">/// Initialization function for the uart</span></span>
-<span class="line" id="L87"><span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">uartInit</span>() <span class="tok-type">void</span> {</span>
-<span class="line" id="L88">    <span class="tok-comment">// setup GPIO pin multiplex functions for UART2</span>
+<span class="line" id="L86">    uartIOMux();</span>
+<span class="line" id="L87"></span>
+<span class="line" id="L88">    <span class="tok-comment">// disable all interrupts</span>
 </span>
-<span class="line" id="L89">    uartIOMux();</span>
+<span class="line" id="L89">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(ier_addr).write_raw(<span class="tok-number">0</span>);</span>
 <span class="line" id="L90"></span>
-<span class="line" id="L91">    <span class="tok-comment">// disable all interrupts</span>
+<span class="line" id="L91">    <span class="tok-comment">// Reset the uart and both fifos</span>
 </span>
-<span class="line" id="L92">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(ier_addr).write_raw(<span class="tok-number">0</span>);</span>
+<span class="line" id="L92">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(srr_addr).write(<span class="tok-number">0x1</span> | <span class="tok-number">0x2</span> | <span class="tok-number">0x4</span>);</span>
 <span class="line" id="L93"></span>
-<span class="line" id="L94">    <span class="tok-comment">// Reset the uart and both fifos</span>
+<span class="line" id="L94">    <span class="tok-comment">// set MCR register to 0 (broadly disables some stuff)</span>
 </span>
-<span class="line" id="L95">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(srr_addr).write(<span class="tok-number">0x1</span> | <span class="tok-number">0x2</span> | <span class="tok-number">0x4</span>);</span>
+<span class="line" id="L95">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(mcr_addr).write(<span class="tok-number">0</span>);</span>
 <span class="line" id="L96"></span>
-<span class="line" id="L97">    <span class="tok-comment">// set MCR register to 0 (broadly disables some stuff)</span>
+<span class="line" id="L97">    <span class="tok-comment">// disable parity, set one stop bit, 8 bit width, aka 8n1</span>
 </span>
-<span class="line" id="L98">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(mcr_addr).write(<span class="tok-number">0</span>);</span>
-<span class="line" id="L99"></span>
-<span class="line" id="L100">    <span class="tok-comment">// disable parity, set one stop bit, 8 bit width, aka 8n1</span>
+<span class="line" id="L98">    <span class="tok-kw">const</span> uart_8n1 = uart_regs.uart_lcr{</span>
+<span class="line" id="L99">        .data_len_sel = <span class="tok-number">3</span>,</span>
+<span class="line" id="L100">        .stop_bits_num = <span class="tok-null">false</span>, <span class="tok-comment">// 0 = 1 bit, 1 = 1.5 bits</span>
 </span>
-<span class="line" id="L101">    <span class="tok-kw">const</span> uart_8n1 = uart_regs.uart_lcr{</span>
-<span class="line" id="L102">        .data_len_sel = <span class="tok-number">3</span>,</span>
-<span class="line" id="L103">        .stop_bits_num = <span class="tok-null">false</span>, <span class="tok-comment">// 0 = 1 bit, 1 = 1.5 bits</span>
+<span class="line" id="L101">        .parity_en = <span class="tok-null">false</span>,</span>
+<span class="line" id="L102">        .even_parity_sel = <span class="tok-null">false</span>,</span>
+<span class="line" id="L103">        .break_ctrl = <span class="tok-null">false</span>,</span>
+<span class="line" id="L104">        .div_lat_access = <span class="tok-null">false</span>,</span>
+<span class="line" id="L105">    };</span>
+<span class="line" id="L106">    mmio.Register(<span class="tok-type">void</span>, uart_regs.uart_lcr).init(lcr_addr).write(uart_8n1);</span>
+<span class="line" id="L107"></span>
+<span class="line" id="L108">    setBaudrate(<span class="tok-number">115200</span>);</span>
+<span class="line" id="L109"></span>
+<span class="line" id="L110">    <span class="tok-comment">// enable the FIFOs and tx empty trigger via their shadow registers</span>
 </span>
-<span class="line" id="L104">        .parity_en = <span class="tok-null">false</span>,</span>
-<span class="line" id="L105">        .even_parity_sel = <span class="tok-null">false</span>,</span>
-<span class="line" id="L106">        .break_ctrl = <span class="tok-null">false</span>,</span>
-<span class="line" id="L107">        .div_lat_access = <span class="tok-null">false</span>,</span>
-<span class="line" id="L108">    };</span>
-<span class="line" id="L109">    mmio.Register(<span class="tok-type">void</span>, uart_regs.uart_lcr).init(lcr_addr).write(uart_8n1);</span>
-<span class="line" id="L110"></span>
-<span class="line" id="L111">    setBaudrate(<span class="tok-number">115200</span>);</span>
-<span class="line" id="L112"></span>
-<span class="line" id="L113">    <span class="tok-comment">// enable the FIFOs and tx empty trigger via their shadow registers</span>
-</span>
-<span class="line" id="L114">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(sfe_addr).write(<span class="tok-number">1</span>);</span>
-<span class="line" id="L115">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(srt_addr).write(<span class="tok-number">1</span>);</span>
-<span class="line" id="L116">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(stet_addr).write(<span class="tok-number">1</span>);</span>
-<span class="line" id="L117">}</span>
+<span class="line" id="L111">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(sfe_addr).write(<span class="tok-number">1</span>);</span>
+<span class="line" id="L112">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(srt_addr).write(<span class="tok-number">1</span>);</span>
+<span class="line" id="L113">    mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(stet_addr).write(<span class="tok-number">1</span>);</span>
+<span class="line" id="L114">}</span>
+<span class="line" id="L115"></span>
+<span class="line" id="L116"><span class="tok-kw">fn</span> <span class="tok-fn">putc</span>(char: <span class="tok-type">u8</span>) <span class="tok-type">void</span> {</span>
+<span class="line" id="L117">    <span class="tok-kw">const</span> usr_reg = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">void</span>).init(usr_addr);</span>
 <span class="line" id="L118"></span>
-<span class="line" id="L119"><span class="tok-kw">fn</span> <span class="tok-fn">putc</span>(char: <span class="tok-type">u8</span>) <span class="tok-type">void</span> {</span>
-<span class="line" id="L120">    <span class="tok-kw">const</span> usr_reg = mmio.Register(<span class="tok-type">u32</span>, <span class="tok-type">void</span>).init(usr_addr);</span>
-<span class="line" id="L121"></span>
-<span class="line" id="L122">    <span class="tok-comment">// wait until the transmit fifo is empty (we are only sending one char</span>
+<span class="line" id="L119">    <span class="tok-comment">// wait until the transmit fifo is empty (we are only sending one char</span>
 </span>
-<span class="line" id="L123">    <span class="tok-comment">// at a time right now.</span>
+<span class="line" id="L120">    <span class="tok-comment">// at a time right now.</span>
 </span>
-<span class="line" id="L124">    <span class="tok-kw">while</span> ((usr_reg.read() &amp; <span class="tok-number">0x1</span>) != <span class="tok-number">0x1</span>) {}</span>
-<span class="line" id="L125"></span>
-<span class="line" id="L126">    <span class="tok-kw">const</span> xmit_reg = mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(thr_addr);</span>
-<span class="line" id="L127">    xmit_reg.write(<span class="tok-builtin">@as</span>(<span class="tok-type">u32</span>, char));</span>
-<span class="line" id="L128">}</span>
-<span class="line" id="L129"></span>
-<span class="line" id="L130"><span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">print</span>(str: []<span class="tok-kw">const</span> <span class="tok-type">u8</span>) <span class="tok-type">void</span> {</span>
-<span class="line" id="L131">    <span class="tok-kw">for</span> (str) |char| {</span>
-<span class="line" id="L132">        putc(char);</span>
-<span class="line" id="L133">    }</span>
-<span class="line" id="L134">}</span>
-<span class="line" id="L135"></span>
+<span class="line" id="L121">    <span class="tok-kw">while</span> ((usr_reg.read() &amp; <span class="tok-number">0x1</span>) != <span class="tok-number">0x1</span>) {}</span>
+<span class="line" id="L122"></span>
+<span class="line" id="L123">    <span class="tok-kw">const</span> xmit_reg = mmio.Register(<span class="tok-type">void</span>, <span class="tok-type">u32</span>).init(thr_addr);</span>
+<span class="line" id="L124">    xmit_reg.write(<span class="tok-builtin">@as</span>(<span class="tok-type">u32</span>, char));</span>
+<span class="line" id="L125">}</span>
+<span class="line" id="L126"></span>
+<span class="line" id="L127"><span class="tok-kw">pub</span> <span class="tok-kw">fn</span> <span class="tok-fn">print</span>(str: []<span class="tok-kw">const</span> <span class="tok-type">u8</span>) <span class="tok-type">void</span> {</span>
+<span class="line" id="L128">    <span class="tok-kw">for</span> (str) |char| {</span>
+<span class="line" id="L129">        putc(char);</span>
+<span class="line" id="L130">    }</span>
+<span class="line" id="L131">}</span>
+<span class="line" id="L132"></span>
 </code></pre></body>
 </html>
